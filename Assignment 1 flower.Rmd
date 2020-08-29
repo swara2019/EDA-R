@@ -1,0 +1,200 @@
+---
+geometry: margin=0.5in
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+```{r, include=FALSE}
+options(tinytex.verbose = TRUE)
+```
+# Exloratory Data Analysis for Flowers Dataset
+
+## Introduction
+In this report,we will explore the Flowers dataset which have been provided as csv file.The data contains information about petal- length,petal-width for different types of flowers.
+```{r, include =FALSE,message =FALSE, warning = FALSE , packages}
+#Importing required packages
+library(dplyr)
+library(ggplot2)
+library(rcompanion)
+library(gridExtra)
+library(qwraps2)
+library(pastecs)
+library(fBasics)
+library(cowplot)
+library(knitr)
+library(Rmisc)
+
+```
+```{r,include =FALSE,message =FALSE, warning = FALSE}  
+#Load the given file
+flowers <- read.csv("flower.csv", header = TRUE)
+#Checking the dataset and no of obs and variables
+head(flowers)
+#Checking if there is missing value in dataset
+is.na(flowers)
+dim(flowers)
+#Structure of the Dataset 
+str(flowers)
+summary(flowers)
+```
+## Data
+The dataset contains total 150 observations of 3 variables - `petal_length`, `petal_width` and `class`.Petal_length and petal_width are Quantitative variables and class is a Categorical variable.There is no missing values in the given dataset. Iris-setosa, Iris-virginica and Iris-versicolor have 50 data points each ,therefore the provided dataset is a balanced one.
+Below is the **statistical summary** for Quantitative variables:`
+```{r ,include=FALSE}
+#table(flowers$class)
+pie(table(flowers$class), main = "Flower Type",
+    col = c("lightblue", "yellow", "orange"), radius = 0.5)
+
+```
+```{r ,echo =FALSE}
+#library(ggplot2)
+#Summary of the Dataset
+#Descriptive Statistics
+subsetflowers <- sapply(flowers, is.numeric)
+summarystats <- stat.desc(flowers[, subsetflowers])
+round(summarystats, 2)
+```
+
+```{r, include=FALSE}
+#Displaying Histogram for the Quantitative Variables
+ggplot(data=flowers, aes (x= petal_length)) + 
+  geom_histogram(bins =25,color="darkblue", fill="lightblue")+ geom_vline(aes(xintercept=mean(petal_length)),
+            color="blue", linetype="dashed", size=1) +  
+  ggtitle("PetalLength Histogram") + labs (x = "PetalLength", y="Frequency")
+
+ggplot(data=flowers, aes (x= petal_width)) + 
+  geom_histogram(bins =20,color="darkblue", fill="lightblue")+ geom_vline(aes(xintercept=mean(petal_width)),
+            color="blue", linetype="dashed", size=1) +  
+  ggtitle("PetalWidth Histogram") + labs (x = "PetalWidth", y="Frequency")
+
+```
+
+```{r ,include=FALSE,message =FALSE, warning = FALSE}
+#More Statistical Summary like Mode, Standard Deviation
+#Variance
+#var
+var(flowers$petal_length)
+var(flowers$petal_width)
+# SD 
+sd(flowers$petal_length)
+sd(flowers$petal_width)
+#IQR
+IQR(flowers$petal_length)
+IQR(flowers$petal_width)
+```
+**Petal-Length** Quartiles value are as follows:
+```{r ,echo=FALSE}
+summary(flowers$petal_length)
+```
+**Petal_Width**:
+```{r ,echo=FALSE}
+summary(flowers$petal_width)
+```
+**interquartile range** for *petal-length* is `r IQR(flowers$petal_length)`and *petal-width* is `r IQR(flowers$petal_width)`.
+```{r,include =FALSE,echo =FALSE}
+#Box Plot to display median and interquantile range
+par(mfrow=c(1,2))
+boxplot(flowers$petal_length,col ="coral",xlab="PetalLength")
+boxplot(flowers$petal_width,col ="lightblue",xlab="PetalWidth")
+```
+```{r, echo =FALSE}
+#BoXPlot
+#Now, it will be more interesting to explore the distribution of the numeric values considering three distinct types of flowers.
+gplot1<-ggplot(flowers, aes (x=class, y=petal_length, col= class)) +geom_boxplot() +
+   ggtitle("Petal-Length wrt Flower Type")+
+  theme_bw()
+gplot1
+gplot2<-ggplot(flowers, aes (x=class, y=petal_width, col = class)) +geom_boxplot() +
+ggtitle("Petal-Width wrt Flower Type") +
+  theme_bw()
+multiplot(gplot1,gplot2,cols=1)
+#The plot displays that petal-length and petal-width are definitely different for each class of flowers.Also setosa type flowers have extremely low petal-lengths compared to the other species. This explains why there a bimodal nature while looking at petal-length at the initial histogram. 
+```
+
+## Analysis
+In this part,we will focus on finding answers of some specific questions as follows:-a)correlation between variables if any,b)Flower type with smallest petal,c)Flower type with largest petal and d)confidence interval for supporting our findings.
+```{r,fig.width=6, fig.asp=0.618, out.width=50, fig.align="center", echo=FALSE}
+dpl1<-ggplot(flowers, aes(x=petal_length,color=class,fill=class))+geom_density(na.rm=TRUE, alpha=0.3)
+dpl2<-ggplot(flowers, aes(x=petal_width,color=class,fill=class))+geom_density(na.rm=TRUE, alpha=0.3)
+multiplot(dpl1,dpl2,cols=1)
+```
+
+```{r, include =FALSE, echo = FALSE }
+#Simple Scatter Plot
+plot(flowers$petal_length,flowers$petal_width)
+ggplot(flowers, aes (x=petal_length, y=petal_width)) + geom_point()
+#This plot shows that there is definitely relationship between petal length and petal width.Also there aig.width=6re two different clusters.Now it will be interesting to find whether the small clusters actually represent one particular type of flowers.We can do that by adding the class in colorcoded information in the next section 
+```
+
+```{r,echo =FALSE}
+#Plot the petal widths with regard to the petal lengths in a scatter plot visualizing the type of flower for each data point
+ggplot(flowers, aes (x=petal_length, y=petal_width, color=class)) + geom_point() +
+  labs(x = "Petal Length", y = "Petal Width", title = "Petal-Length & Petal-Width of Three Types of Flowers")
+```
+```{r ,include =FALSE,echo=FALSE ,message =FALSE, warning = FALSE}
+#correlation between variables
+cor(flowers$petal_length,flowers$petal_width)
+cov(flowers$petal_length,flowers$petal_width)
+```
+The plot depicts that setosa constitutes smaller cluster in lower left.Other two types also display differences,even though they are not easily separated.This low petal length of setaosa explains why there was bimodal nature when looking at petal length on the first graph.Also **iris-setosa** has the smallest petal and **iris-virginica** has largest petal.There is **strong positive correlation** between petal-length and petal-width(correlation coefficient =0.962) which signifies flowers with longer petals are often wider.Therefore petals are normally getting bigger when both dimensions increase.
+
+```{r,echo= FALSE}
+library(knitr)
+petallengthdata = groupwiseMean(petal_length ~ class,
+                    data   = flowers,
+                    conf   = 0.95,
+                    digits =3)
+#petallengthdata 
+petalwidthdata = groupwiseMean(petal_width ~ class,
+                    data   = flowers,
+                    conf   = 0.95,
+                    digits =3)
+
+#Trad.lower and Trad.upper indicate the confidence interval for the mean of petal-length and petal-width
+kable(petallengthdata, caption="CI for PetalLength Mean")
+kable(petalwidthdata, caption="CI for PetalWidth Mean")
+```
+
+```{r, include=FALSE}
+#library(rcompanion)
+petallengthdata = groupwiseMean(petal_length ~ class,
+                    data   = flowers,
+                    conf   = 0.95,
+                    digits =3)
+#petallengthdata 
+petalwidthdata = groupwiseMean(petal_width ~ class,
+                    data   = flowers,
+                    conf   = 0.95,
+                    digits =3)
+```
+```{r,echo =FALSE}
+#Plotting Confidence Interval
+meanplot1<-ggplot(petallengthdata, aes(x = class,y = Mean, fill= class))+
+  geom_col(alpha = 0.5, position = 'dodge') + 
+  geom_errorbar(aes(ymin = Trad.lower,ymax = Trad.upper),
+width = 0.2, colour = "blue", position = position_dodge(.9)) 
+finalplot1<-meanplot1 + labs(y =" Mean Petal Length") + theme_bw() 
+meanplot2<-ggplot(petalwidthdata, aes(x = class,y = Mean, fill= class))+
+  geom_col(alpha = 0.5, position = 'dodge') + 
+  geom_errorbar(aes(ymin = Trad.lower,ymax = Trad.upper),
+width = 0.2, colour = "blue", position = position_dodge(.9)) 
+finalplot2<-meanplot2 + labs(y =" Mean Petal Width" ) + theme_bw()
+grid.arrange(finalplot1, finalplot2, ncol=1)
+
+meanplot2<-ggplot(petalwidthdata, aes(x = class,y = Mean, fill= class))+
+  geom_col(alpha = 0.5, position = 'dodge') + 
+  geom_boxplot(aes(ymin = Trad.lower,ymax = Trad.upper),
+width = 0.2, colour = "blue", position = position_dodge(.9)) 
+finalplot2<-meanplot2 + labs(y =" Mean Petal Width" ) + theme_bw()
+```
+
+95% confidence interval of means has been represented by the error bars in blue color.The height of the colored bars represent mean of petal_length and petal_width for each class.We are 95% certain that true population mean of petal-length is between [1.41,1.51]for setoca,between [5.40, 5.71]for virginica and [4.13, 4.39] for versicolor.As the 95% CI error bars(both petal-length and petal-width)for each type of flower do not overlap, we are definite that the difference among means is statistically significant.
+
+## Conclusion
+Here we have done a brief exploratory data analysis on Flowers dataset and found some interesting insights.All three types of flowers are showing strong correlation between petal-length and width.We also find that iris-setosa type has the smallest petal,iris-versicolor has biggest petal with 95% confidence interval.
+
+
+
+
